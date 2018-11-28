@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "421787402206",
+    "firebase_url": "https://chatbot-eea3d.firebaseio.com",
+    "project_id": "chatbot-eea3d",
+    "storage_bucket": "chatbot-eea3d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421787402206:android:2c4f8e9c57ed097d",
+        "android_client_info": {
+          "package_name": "cooperativa.evaluacionprestamosapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "421787402206-3dgqe4f6eqdb1hrtogl3l3j972shpkbt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "cooperativa.evaluacionprestamosapp",
+            "certificate_hash": "f88eecec281f35b80cb82ad0320c161865b4af0c"
+          }
+        },
+        {
+          "client_id": "421787402206-j2eddn2bal5ckc8ihjukce4iadpbor3n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9gUkid2ekgFOs1vhwaO8M6gb0oIRAN1Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "421787402206-j2eddn2bal5ckc8ihjukce4iadpbor3n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

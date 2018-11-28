@@ -1,5 +1,6 @@
 package cooperativa.evaluacionprestamosapp;
 import android.content.Context;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -7,8 +8,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.List;
+import com.adroitandroid.chipcloud.ChipCloud;
 
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+
+/**
+ * Created by deathcode on 26/01/18.
+ */
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.CustomViewHolder> {
 
@@ -48,6 +57,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.CustomVi
 
     @Override
     public void onBindViewHolder(CustomViewHolder holder, int position) {
-        holder.textView.setText(responseMessages.get(position).getText());
+            holder.textView.setText(responseMessages.get(position).getText());
     }
 }
