@@ -50,11 +50,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         firebaseAuth = FirebaseAuth.getInstance();
 
         //Referenciamos los views
-        TextEmail = (EditText) findViewById(R.id.TxtEmail);
-        TextPassword = (EditText) findViewById(R.id.TxtPassword);
+        TextEmail = (EditText) findViewById(R.id.editEmail1);
+        TextPassword = (EditText) findViewById(R.id.editPassword1);
 
-        btnRegistrar = (Button) findViewById(R.id.botonRegistrar);
-        btnLogin = (Button) findViewById(R.id.botonLogin);
+        btnRegistrar = (Button) findViewById(R.id.buttonRegister1);
+        btnLogin = (Button) findViewById(R.id.buttonLogin);
 
         progressDialog = new ProgressDialog(this);
 
@@ -160,11 +160,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         switch (view.getId()) {
 
-            case R.id.botonRegistrar:
+            case R.id.buttonRegister1:
                 //Invocamos al método:
                 registrarUsuario();
                 break;
-            case R.id.botonLogin:
+            case R.id.buttonLogin:
                 loguearUsuario();
                 break;
         }

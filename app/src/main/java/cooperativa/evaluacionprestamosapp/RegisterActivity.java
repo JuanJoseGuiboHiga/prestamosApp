@@ -16,11 +16,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 
 public class RegisterActivity extends Activity {
     EditText emailtxt,passwordtxt;
-    Button registerButton;
+    Button registerButton, loginButton;
     FirebaseAuth firebaseAuth;
     private ProgressDialog progressDialog;
     @Override
@@ -31,7 +32,7 @@ public class RegisterActivity extends Activity {
         emailtxt = (EditText) findViewById(R.id.editEmail);
         passwordtxt = (EditText) findViewById(R.id.editPassword);
         registerButton = (Button) findViewById(R.id.buttonRegister);
-  //      loginButton = (Button) findViewById(R.id.buttonLogin);
+        loginButton = (Button) findViewById(R.id.buttonLogin);
 
         progressDialog = new ProgressDialog(this);
 
@@ -80,15 +81,39 @@ public class RegisterActivity extends Activity {
             }
         });
 
-    /* loginButton.setOnClickListener(new View.OnClickListener() {
+    loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(),LoginActivity.class));
-            }
-        });*/
+                progressDialog.setMessage("Realizando consulta en linea...");
+                progressDialog.show();
+                final String email = emailtxt.getText().toString().trim();
+                String password = passwordtxt.getText().toString().trim();
+                //loguear usuario
+                firebaseAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                //checking if success
+                                if (task.isSuccessful()) {
+                                    int pos = email.indexOf("@");
+                                    String user = email.substring(0, pos);
+                                    Toast.makeText(RegisterActivity.this, "Bienvenido: " + emailtxt.getText(), Toast.LENGTH_LONG).show();
+                                    Intent intencion = new Intent(getApplication(), DashboardActivity.class);
+                                    startActivity(intencion);
 
-       /* if(firebaseAuth.getCurrentUser()!=null){
-            startActivity(new Intent(getApplicationContext(),LoginActivity.class));
-        }*/
+
+                                } else {
+                                    if (task.getException() instanceof FirebaseAuthUserCollisionException) {//si se presenta una colisión
+                                        Toast.makeText(RegisterActivity.this, "Ese usuario ya existe ", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(RegisterActivity.this, "No se pudo registrar el usuario ", Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                                progressDialog.dismiss();
+                            }
+                        });
+            }
+        });
+
     }
 }

@@ -49,8 +49,9 @@ public class MessengerActivity extends Activity {
     boolean solicitaFechaVen;
     boolean solicitaEstadoSol;
     private ChatView mChatView;
-    final AIConfiguration configuration = new AIConfiguration("60d5fd9490c14a1a9f31fbf13814dbda");
+    final AIConfiguration configuration = new AIConfiguration("");
     AIDataService dataService = new AIDataService(configuration);
+    AsyncTask<Object, Void, String> asyncTask;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,7 +141,27 @@ public class MessengerActivity extends Activity {
                     try
                     {
                         TimeUnit.MILLISECONDS.sleep(900);
-                        new Connection().execute();
+                      //  new Connection().execute();
+                        asyncTask = new AsyncTask<Object, Void, String>() {
+
+                            @Override
+                            protected String doInBackground(Object... params) {
+
+                                respuestaDialogflow = callDialog(mChatView.getInputText());
+                                try
+                                {
+                                    TimeUnit.MILLISECONDS.sleep(900);
+                                    sendToChat();
+                                    TimeUnit.MILLISECONDS.sleep(900);
+                                }catch(Exception e)
+                                {
+
+                                }
+                                return "";
+                            }
+                        };
+                        asyncTask.execute();
+
                         TimeUnit.MILLISECONDS.sleep(900);
                     }catch(Exception e)
                     {

@@ -43,5 +43,13 @@
         android:layout_marginTop="20dp"
         android:text="Register" />
 
+    <Button
+        android:id="@+id/buttonLogin"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonRegister"
+        android:layout_marginTop="20dp"
+        android:text="Login" />
+
 
 </RelativeLayout>
