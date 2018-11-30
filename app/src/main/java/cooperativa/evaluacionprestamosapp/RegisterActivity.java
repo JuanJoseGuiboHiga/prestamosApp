@@ -45,15 +45,15 @@ public class RegisterActivity extends Activity {
                 String password = passwordtxt.getText().toString();
 
                 if(TextUtils.isEmpty(email)){
-                    Toast.makeText(getApplicationContext(),"Please fill in the required fields",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Por favor, ingrese su correo",Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(TextUtils.isEmpty(password)){
-                    Toast.makeText(getApplicationContext(),"Please fill in the required fields",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Por favor ingrese su contraseña",Toast.LENGTH_SHORT).show();
                 }
 
                 if(password.length()<6){
-                    Toast.makeText(getApplicationContext(),"Password must be at least 6 characters",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"La contraseña debe ser de al menos 6 digitos",Toast.LENGTH_SHORT).show();
                 }
                 progressDialog.setMessage("Realizando registro en linea...");
                 progressDialog.show();
@@ -64,12 +64,15 @@ public class RegisterActivity extends Activity {
                                 try
                                 {
                                     if(task.isSuccessful()){
-                                        startActivity(new Intent(getApplicationContext(),DashboardActivity.class));
                                         finish();
+                                        Intent intencion = new Intent(getApplication(), DashboardActivity.class);
+                                        String usrUID = firebaseAuth.getUid();
+                                        intencion.putExtra("userUID",usrUID);
+                                        startActivity(intencion);
                                         progressDialog.dismiss();
                                     }
                                     else{
-                                        Toast.makeText(getApplicationContext(),"E-mail or password is wrong",Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(),"El correo o la contraseña son incorrectos",Toast.LENGTH_SHORT).show();
                                     }
                                 }catch(Exception e)
                                 {
@@ -88,6 +91,7 @@ public class RegisterActivity extends Activity {
                 progressDialog.show();
                 final String email = emailtxt.getText().toString().trim();
                 String password = passwordtxt.getText().toString().trim();
+
                 //loguear usuario
                 firebaseAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
@@ -99,6 +103,8 @@ public class RegisterActivity extends Activity {
                                     String user = email.substring(0, pos);
                                     Toast.makeText(RegisterActivity.this, "Bienvenido: " + emailtxt.getText(), Toast.LENGTH_LONG).show();
                                     Intent intencion = new Intent(getApplication(), DashboardActivity.class);
+                                    String usrUID = firebaseAuth.getUid();
+                                    intencion.putExtra("userUID",usrUID);
                                     startActivity(intencion);
 
 

@@ -1,6 +1,7 @@
 package cooperativa.evaluacionprestamosapp;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -8,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -41,8 +43,9 @@ import ai.api.AIConfiguration;
 import ai.api.AIDataService;
 import ai.api.model.AIRequest;
 import ai.api.model.AIResponse;
-
-public class MessengerActivity extends Activity {
+import android.view.KeyEvent;
+import android.view.Menu;
+public class MessengerActivity extends AppCompatActivity {
     RequestQueue requestQueue;
     String respuesta;
     String respuestaDialogflow;
@@ -56,13 +59,14 @@ public class MessengerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messenger);
+
         solicitaFechaVen = false;
         solicitaEstadoSol = false;
         int myId = 0;
         //User icon
         Bitmap myIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
         //User name
-        String myName = "JJ";
+        String myName = "";
 
         int yourId = 1;
         Bitmap yourIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
@@ -71,7 +75,7 @@ public class MessengerActivity extends Activity {
         final ChatUser me = new ChatUser(myId, myName, myIcon);
         final ChatUser you = new ChatUser(yourId, yourName, yourIcon);
         mChatView = (ChatView) findViewById(R.id.chat_view);
-        final ChipCloud chipCloud = (ChipCloud) findViewById(R.id.chip_cloud);
+    /*    final ChipCloud chipCloud = (ChipCloud) findViewById(R.id.chip_cloud);
      //   chipCloud.setSelectTransitionMS(500);
         chipCloud.addChip("Empezar");
         chipCloud.setGravity(ChipCloud.Gravity.CENTER);
@@ -110,7 +114,7 @@ public class MessengerActivity extends Activity {
             public void chipDeselected(int index) {
             }
         });
-
+*/
         mChatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.green500));
         mChatView.setLeftBubbleColor(Color.WHITE);
         mChatView.setBackgroundColor(ContextCompat.getColor(this, R.color.blueGray500));
@@ -243,6 +247,14 @@ public class MessengerActivity extends Activity {
 
         }
 
+    @Override
+    public void  onBackPressed() {
+            Intent i = new Intent(this,RatingActivity.class);
+            String userUID= getIntent().getStringExtra("userUID");
+            i.putExtra("userUID", userUID);
+            startActivity(i);
+    }
+
   /*  private String callApi() {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         //Prepare the Request
@@ -326,6 +338,7 @@ public class MessengerActivity extends Activity {
 
       private void sendToChat() {
           RequestQueue queue = Volley.newRequestQueue(this);
+          final String userUID2= getIntent().getStringExtra("userUID");
           StringRequest sr = new StringRequest(Request.Method.POST,"http://192.168.1.8:8089/chat", new Response.Listener<String>() {
               @Override
               public void onResponse(String response) {
@@ -343,6 +356,7 @@ public class MessengerActivity extends Activity {
                   Map<String,String> params = new HashMap<String, String>();
                   params.put("msg",mChatView.getInputText());
                   params.put("chat",respuestaDialogflow);
+                  params.put("userid",userUID2);
                   return params;
               }
 

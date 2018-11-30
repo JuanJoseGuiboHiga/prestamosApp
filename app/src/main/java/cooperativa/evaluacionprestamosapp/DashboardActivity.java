@@ -16,11 +16,14 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
         mycard = (CardView) findViewById(R.id.chatbot);
         i = new Intent(this,MessengerActivity.class);
+        String userUID= getIntent().getStringExtra("userUID");
+        i.putExtra("userUID", userUID);
         mycard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(i);
             }
         });
+
     }
 }

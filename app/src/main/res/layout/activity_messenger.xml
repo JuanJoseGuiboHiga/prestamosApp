@@ -11,24 +11,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
-            android:layout_below="@+id/lChip">
+           >
 
 
         </com.github.bassaer.chatmessageview.view.ChatView>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/lChip"
-        android:background="@color/blueGray300">
 
-        <com.adroitandroid.chipcloud.ChipCloud
-            android:id="@+id/chip_cloud"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_alignParentTop="true"/>
-    </LinearLayout>
 
 
 
