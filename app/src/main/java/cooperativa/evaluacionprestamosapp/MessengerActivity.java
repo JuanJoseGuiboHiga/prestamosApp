@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -34,6 +35,12 @@ import com.github.bassaer.chatmessageview.view.ChatView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -45,27 +52,32 @@ import ai.api.model.AIRequest;
 import ai.api.model.AIResponse;
 import android.view.KeyEvent;
 import android.view.Menu;
+
+import javax.net.ssl.HttpsURLConnection;
+
 public class MessengerActivity extends AppCompatActivity {
-    RequestQueue requestQueue;
+     RequestQueue requestQueue;
     String respuesta;
     String respuestaDialogflow;
     boolean solicitaFechaVen;
     boolean solicitaEstadoSol;
+    boolean respuestaDefault;
     private ChatView mChatView;
-    final AIConfiguration configuration = new AIConfiguration("");
+    String userUID = null;
+    final AIConfiguration configuration = new AIConfiguration("60d5fd9490c14a1a9f31fbf13814dbda");
     AIDataService dataService = new AIDataService(configuration);
     AsyncTask<Object, Void, String> asyncTask;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messenger);
-
+        requestQueue = Volley.newRequestQueue(this);
         solicitaFechaVen = false;
         solicitaEstadoSol = false;
+        respuestaDefault = false;
+
         int myId = 0;
-        //User icon
         Bitmap myIcon = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
-        //User name
         String myName = "";
 
         int yourId = 1;
@@ -75,46 +87,6 @@ public class MessengerActivity extends AppCompatActivity {
         final ChatUser me = new ChatUser(myId, myName, myIcon);
         final ChatUser you = new ChatUser(yourId, yourName, yourIcon);
         mChatView = (ChatView) findViewById(R.id.chat_view);
-    /*    final ChipCloud chipCloud = (ChipCloud) findViewById(R.id.chip_cloud);
-     //   chipCloud.setSelectTransitionMS(500);
-        chipCloud.addChip("Empezar");
-        chipCloud.setGravity(ChipCloud.Gravity.CENTER);
-        chipCloud.setChipListener(new ChipListener() {
-            @Override
-            public void chipSelected(int index) {
-                if(index == 0)
-                {
-                    Message message12 = new Message.Builder()
-                            .setUser(you)
-                            .setRight(false)
-                            .setText("Bienvenido, que servicio desea?")
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(message12);
-                }
-
-                chipCloud.setSelectTransitionMS(300);
-                chipCloud.removeAllViews();
-                chipCloud.addChip("Solicitar un prestamo");
-                chipCloud.addChip("Agendar una reunion con un representante");
-                chipCloud.addChip("Consultar estado de solicitud de préstamo");
-                if(chipCloud.getChildAt(index).getTag().toString()=="Solicitar un prestamo")
-                {
-                    Message message4 = new Message.Builder()
-                            .setUser(you)
-                            .setRight(true)
-                            .setText("Para solicitar un préstamo tiene que generar una solicitud de prestamos")
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(message4);
-                }
-            }
-
-            @Override
-            public void chipDeselected(int index) {
-            }
-        });
-*/
         mChatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.green500));
         mChatView.setLeftBubbleColor(Color.WHITE);
         mChatView.setBackgroundColor(ContextCompat.getColor(this, R.color.blueGray500));
@@ -127,249 +99,243 @@ public class MessengerActivity extends AppCompatActivity {
         mChatView.setDateSeparatorColor(Color.WHITE);
         mChatView.setMessageMarginTop(5);
         mChatView.setMessageMarginBottom(5);
-
         mChatView.setOnClickSendButtonListener(new View.OnClickListener() {
             @Override
+
             public void onClick(View view) {
+                if (solicitaFechaVen == false && solicitaEstadoSol == false) {
+                    sendUserMsg(me,mChatView.getInputText());
+                    obtenerReespuesta(mChatView.getInputText(), new ServerCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            evaluateConversation(result);
+                            sendBotMsg(you,result);
+                        }
+                    });
 
-                int sendDelay = (new Random().nextInt(4) + 1) * 1000;
-                if(solicitaFechaVen == false && solicitaEstadoSol == false)
-                {
-                    Message message = new Message.Builder()
-                            .setUser(me)
-                            .setRight(true)
-                            .setText(mChatView.getInputText())
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(message);
-                    try
-                    {
-                        TimeUnit.MILLISECONDS.sleep(900);
-                      //  new Connection().execute();
-                        asyncTask = new AsyncTask<Object, Void, String>() {
-
-                            @Override
-                            protected String doInBackground(Object... params) {
-
-                                respuestaDialogflow = callDialog(mChatView.getInputText());
-                                try
-                                {
-                                    TimeUnit.MILLISECONDS.sleep(900);
-                                    sendToChat();
-                                    TimeUnit.MILLISECONDS.sleep(900);
-                                }catch(Exception e)
-                                {
-
-                                }
-                                return "";
+                }else if(solicitaEstadoSol == true) {
+                    sendUserMsg(me,mChatView.getInputText());
+                    obtenerEstado(mChatView.getInputText(), new ServerCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            evaluateConversation(result);
+                            String msg = null;
+                            if(result.equals("null"))
+                            {
+                                msg = "No existe la solicitud ingresada";
+                            }else
+                            {
+                                msg = result;
                             }
-                        };
-                        asyncTask.execute();
-
-                        TimeUnit.MILLISECONDS.sleep(900);
-                    }catch(Exception e)
-                    {
-
-                    }
-                    final Message receivedMessage = new Message.Builder()
-                            .setUser(you)
-                            .setRight(false)
-                            .hideIcon(true)
-                            .setText(respuestaDialogflow)
-                            .build();
-
-                    try
-                    {
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mChatView.receive(receivedMessage);
+                            sendBotMsg(you,msg);
+                            solicitaEstadoSol = false;
+                        }
+                    });
+                }else if(solicitaFechaVen == true) {
+                    sendUserMsg(me,mChatView.getInputText());
+                    obtenerFechaVencimiento(mChatView.getInputText(), new ServerCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            evaluateConversation(result);
+                            String msg = null;
+                            if(result.equals("null"))
+                            {
+                                msg = "No se ha encontrado cuota relacionada a su documento de identidad";
+                            }else
+                            {
+                                msg = "Su cuota vence el: "+result;
                             }
-                        }, sendDelay);
-                    }catch(Exception e)
-                    {
-                        Log.e("error",e.toString());
-                    }
-
-                    if(respuestaDialogflow.contains("Por favor, ingrese su número de préstamo y su dni"))
-                    {
-                        solicitaFechaVen = true;
-                    }
-
-                    if(respuestaDialogflow.contains("Por favor para poder consultar su solicitud de prestamo ingrese su numero de dni y el número de solicitud"))
-                    {
-                        solicitaEstadoSol = true;
-                    }
-                }else if(solicitaFechaVen == true)
-                {
-                    Message messageFechaVenSended = new Message.Builder()
-                            .setUser(me)
-                            .setRight(true)
-                            .setText(mChatView.getInputText())
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(messageFechaVenSended);
-
-                    Message messageFechaVen = new Message.Builder()
-                            .setUser(you)
-                            .setRight(false)
-                            .setText("Su cuota vence el 25/11/2018")
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(messageFechaVen);
-                    solicitaFechaVen = false;
-                }else
-                {
-                    Message messageEstadoSol = new Message.Builder()
-                            .setUser(me)
-                            .setRight(true)
-                            .setText(mChatView.getInputText())
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(messageEstadoSol);
-
-                    Message messageEstadoSol2 = new Message.Builder()
-                            .setUser(you)
-                            .setRight(false)
-                            .setText("Su solicitud se encuentra en estado: En Proceso")
-                            .hideIcon(true)
-                            .build();
-                    mChatView.send(messageEstadoSol2);
-                    solicitaEstadoSol = false;
+                            sendBotMsg(you,msg);
+                            solicitaFechaVen = false;
+                        }
+                    });
                 }
 
 
-
-
             }
 
         });
 
-        }
+    }
 
     @Override
     public void  onBackPressed() {
-            Intent i = new Intent(this,RatingActivity.class);
-            String userUID= getIntent().getStringExtra("userUID");
-            i.putExtra("userUID", userUID);
-            startActivity(i);
+        Intent i = new Intent(this, RatingActivity.class);
+        String userUID = getIntent().getStringExtra("userUID");
+        i.putExtra("userUID", userUID);
+        startActivity(i);
     }
 
-  /*  private String callApi() {
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        //Prepare the Request
-        String conversacion = userInput.getText().toString();
-        String url = "http://192.168.43.136:8080/nlp/"+conversacion;
-        JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET, //GET or POST
-                url,
-                null, //Parameters
-                new Response.Listener<JSONArray>() { //Listener OK
-
-                    @Override
-                    public void onResponse(JSONArray responsePlaces) {
-                        // label.setText(responsePlaces.);
-                        // Process the JSON
-                        try{
-                            // Loop through the array elements
-                            for(int i=0;i<responsePlaces.length();i++){
-                                // Get current json object
-                                JSONObject student = responsePlaces.getJSONObject(i);
-
-                                // Get the current student (json object) data
-                                respuesta = student.getString("respuesta");
-
-                             //   label.setText(respuesta);
-                            }
-                        }catch (JSONException e){
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() { //Listener ERROR
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-               // userInput.setText(error.toString());
-                Log.e("Error",error.toString());
-            }
-        });
-        requestQueue.add(request);
-        return respuesta;
-    }*/
-
-   public String callDialog(String conversacion)
-    {
-       String respuestas=null;
+    private void obtenerReespuesta(String conversacion,final ServerCallback callback) {
         try {
-            AIRequest request = new AIRequest(conversacion);
-            AIResponse response = dataService.request(request);
-
-            String respuestaChat1 = null;
-            if (response.getStatus().getCode() == 200) {
-                respuestaChat1 =response.getResult().getFulfillment().getSpeech();
-            }
-            respuestas = respuestaChat1;
+            conversacion = URLEncoder.encode(conversacion, "UTF-8");
         } catch (Exception e) {
+
+        }
+        String url = "http://192.168.1.8:8080/nlp/" + conversacion;
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+                            callback.onSuccess(response.get("respuesta").toString());
+                        }catch(Exception e)
+                        {
+
+                        }
+
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+        requestQueue.add(getRequest);
+
+    }
+    private void obtenerFechaVencimiento(String idCliente,final ServerCallback callback) {
+        String url = "http://192.168.1.8:8080/fechaVencimiento/"+idCliente;
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+                            callback.onSuccess(response.get("fechaVencimiento").toString());
+                        }catch(Exception e)
+                        {
+
+                        }
+
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+        requestQueue.add(getRequest);
+    }
+    private void obtenerEstado(String numeroSolicitud,final ServerCallback callback) {
+        String url = "http://192.168.1.8:8080/estadoSolicitud/"+numeroSolicitud;
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+                            callback.onSuccess(response.get("estado").toString());
+                        }catch(Exception e)
+                        {
+
+                        }
+
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+        requestQueue.add(getRequest);
+    }
+    private void registrarPreguntaSinRespuesta(String comentario) {
+        final String userUID2= getIntent().getStringExtra("userUID");
+        try
+        {
+            comentario = URLEncoder.encode(comentario,"UTF-8");
+        }catch(Exception e)
+        {
+
+        }
+
+        String url = "http://192.168.1.8:8080/conversacion/"+userUID2+"/"+comentario;
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // display response
+                        Log.d("Response", response.toString());
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+
+        requestQueue.add(getRequest);
+    }
+    private void sendUserMsg(ChatUser me, String msg)
+    {
+        Message message = new Message.Builder()
+                .setUser(me)
+                .setRight(true)
+                .setText(msg)
+                .hideIcon(true)
+                .build();
+        mChatView.send(message);
+    }
+
+    private void sendBotMsg(ChatUser youactivity, String mensaje)
+    {
+        try
+        {
+            final String msg = mensaje;
+            final ChatUser you = youactivity;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Message messageEstadoSol2 = new Message.Builder()
+                            .setUser(you)
+                            .setRight(false)
+                            .setText(msg)
+                            .hideIcon(true)
+                            .build();
+                    mChatView.send(messageEstadoSol2);
+                }
+            }, 300);
+        }catch(Exception e)
+        {
             Log.e("error",e.toString());
         }
-        return respuestas;
-
     }
 
-    private class Connection extends AsyncTask {
-
-        @Override
-        protected Object doInBackground(Object... arg0) {
-            respuestaDialogflow = callDialog(mChatView.getInputText());
-            try
-            {
-                TimeUnit.MILLISECONDS.sleep(900);
-                sendToChat();
-                TimeUnit.MILLISECONDS.sleep(900);
-            }catch(Exception e)
-            {
-
-            }
-
-            return null;
+    private void evaluateConversation(String msg)
+    {
+        if(msg.contains("Por favor, ingrese su numero de documento"))
+        {
+            solicitaFechaVen = true;
         }
 
+        if(msg.contains("Por favor para poder consultar su solicitud de prestamo ingrese su codigo de solicitud"))
+        {
+            solicitaEstadoSol = true;
+        }
+        if(msg.contains("Disculpe, vuelva a ingresar su consulta. "))
+        {
+            respuestaDefault = true;
+            registrarPreguntaSinRespuesta(mChatView.getInputText());
+            respuestaDefault = false;
+        }
     }
-
-      private void sendToChat() {
-          RequestQueue queue = Volley.newRequestQueue(this);
-          final String userUID2= getIntent().getStringExtra("userUID");
-          StringRequest sr = new StringRequest(Request.Method.POST,"http://192.168.1.8:8089/chat", new Response.Listener<String>() {
-              @Override
-              public void onResponse(String response) {
-
-              }
-          }, new Response.ErrorListener() {
-              @Override
-              public void onErrorResponse(VolleyError error) {
-                    String msgerror = error.toString();
-                    msgerror = "";
-              }
-          }){
-              @Override
-              protected Map<String,String> getParams(){
-                  Map<String,String> params = new HashMap<String, String>();
-                  params.put("msg",mChatView.getInputText());
-                  params.put("chat",respuestaDialogflow);
-                  params.put("userid",userUID2);
-                  return params;
-              }
-
-              @Override
-              public Map<String, String> getHeaders() throws AuthFailureError {
-                  Map<String,String> params = new HashMap<String, String>();
-                  params.put("Content-Type","application/x-www-form-urlencoded");
-                  return params;
-              }
-          };
-          queue.add(sr);
-   }
-
-
 }
 
